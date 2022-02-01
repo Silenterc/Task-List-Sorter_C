@@ -67,7 +67,7 @@ char* readTask(TASK* tasks,int index,int nr,int* indexOfDup){
     buffer[chars-1] = '\0';
     hasVulgarRec(buffer,vulgar,0);
     if(isInTasks(tasks,buffer,index,&indexOfDuplicate)){
-        if(nr == 2){
+        if(nr == 2){ //If we want to remove a task, we want to know the index of the task to be removed
             *indexOfDup = indexOfDuplicate;
             free(buffer);
             return NULL;
@@ -103,20 +103,20 @@ void listTasks(TASK* tasks, int index){
 void removeTask(TASK** tasks,int* index){
     int indexOfDup = -1;
     readTask(*tasks,*index,2,&indexOfDup);
-    if(indexOfDup == -1){
+    if(indexOfDup == -1){ //If the task is not in the array
         printf("This task is not on the list.\n");
         return;
     }
     for(int i = indexOfDup;i < *index;i++){
-        if(i + 1 == *index){
+        if(i + 1 == *index){ //The last task in the array will be there twice and will be waiting to be overwritten by a new one
             break;
         }
-        if(i == indexOfDup){
+        if(i == indexOfDup){ //Free the text of the removed task
             free((*tasks)[i].text);
         }
-        (*tasks)[i] = (*tasks)[i+1];
+        (*tasks)[i] = (*tasks)[i+1]; //Move all the tasks to the left in the array
     }
-    (*index)--;
+    (*index)--; 
 }
 int main() {
     int nr = 0; 
