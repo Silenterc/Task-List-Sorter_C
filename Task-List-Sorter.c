@@ -40,7 +40,7 @@ void hasVulgarRec(char* text, const char** vulgar, int index){ //Recursively cen
     if(index == ARRMAX){
         return;
     }
-    char* vlg = strstr(text,vulgar[index]); //I get pointer to a vulgar word in the text, if it is there
+    char* vlg = strcasestr(text,vulgar[index]); //I get pointer to a vulgar word in the text, if it is there
     int tmp = 0;
     if(vlg){
         for(unsigned long l = vlg-text;l<vlg-text + strlen(vulgar[index]);l++){ //I censor the vulgar part in the text   f.e. motherfucker -> mother****er
@@ -58,7 +58,7 @@ void hasVulgarRec(char* text, const char** vulgar, int index){ //Recursively cen
                     tmp--;
                 }
            }
-           hasVulgarRec(text,vulgar,index+1);
+           hasVulgarRec(text,vulgar,index);
     }else{
         hasVulgarRec(text,vulgar,index+1);
     }
@@ -131,11 +131,14 @@ void copyTasks(TASK* orig,TASK* newT,int index){ //Function that copies and arra
         newT[i]  = copyTask;
     }
 }
-int cmpAlp(const void* a,const void *b){
+int cmpAlp(const void* a,const void* b){
     TASK* first = (TASK*)a;
     TASK* sec = (TASK*)b;
     return strcasecmp(first -> text,sec -> text); //Compare alphabetically
 
+}
+int cmpOrd(const void* a, const void* b){
+    return (*(TASK*)b).order - (*(TASK*)a).order;
 }
 void listTasksAlp(TASK* tasks,int index){
     TASK* alpTasks = (TASK*) malloc (sizeof(TASK)*index); //A new independent array to sort alphabetically
@@ -143,6 +146,13 @@ void listTasksAlp(TASK* tasks,int index){
     qsort(alpTasks,index,sizeof(TASK),cmpAlp);
     listTasks(alpTasks,index);
     deleteTasks(alpTasks,index); //Delete the alphabetically sorted array
+}
+void listTasksAgOrder(TASK* tasks,int index){
+    TASK* ordTasks = (TASK*) malloc (sizeof(TASK)*index);
+    copyTasks(tasks,ordTasks,index);
+    qsort(ordTasks,index,sizeof(TASK),cmpOrd);
+    listTasks(ordTasks,index);
+    deleteTasks(ordTasks,index);
 }
 int main() {
     int nr = 0; 
@@ -169,6 +179,10 @@ int main() {
                 break;
             case 4:
                 listTasksAlp(tasks,index);
+                break;
+            case 5:
+                listTasksAgOrder(tasks,index);
+                break;
         }
         
     }
