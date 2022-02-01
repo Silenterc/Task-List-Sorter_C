@@ -6,12 +6,18 @@ typedef struct task{
     char* text;
     int order;
 } TASK;
+void deleteTasks(TASK* tasks,int index){
+    for(int i = 0; i < index; i++){
+        free(tasks[i].text);
+    }
+    free(tasks);
+}
 int readNR(){ //Reads and returns the number of the command the user wants to execute
     int nbr = 0; 
     char* buffer = NULL;
     size_t size = 0;
     printf("Type 1 to add a task.\nType 2 to remove a task.\nType 3 to list the tasks.\n");
-    printf("Type 4 to sort and list the tasks alphabetically.\nType 5 to sort and list the tasks via the order they came in.\n");
+    printf("Type 4 to sort and list the tasks alphabetically.\nType 5 to sort and list the tasks against the order they came in.\n");
     printf("Type anything else to terminate the program.\n");
     getline(&buffer,&size,stdin);
     if(sscanf(buffer,"%d",&nbr) != 1 || nbr < 1 || nbr > 5){ //Input validation, the number has to be between 1 and 5
@@ -118,6 +124,26 @@ void removeTask(TASK** tasks,int* index){
     }
     (*index)--; 
 }
+void copyTasks(TASK* orig,TASK* newT,int index){ //Function that copies and array into a new one
+    for(int i = 0;i < index;i++){
+        char* copyText = strdup(orig[i].text);
+        TASK copyTask = {copyText,orig[i].order};
+        newT[i]  = copyTask;
+    }
+}
+int cmpAlp(const void* a,const void *b){
+    TASK* first = (TASK*)a;
+    TASK* sec = (TASK*)b;
+    return strcasecmp(first -> text,sec -> text); //Compare alphabetically
+
+}
+void listTasksAlp(TASK* tasks,int index){
+    TASK* alpTasks = (TASK*) malloc (sizeof(TASK)*index); //A new independent array to sort alphabetically
+    copyTasks(tasks,alpTasks,index);
+    qsort(alpTasks,index,sizeof(TASK),cmpAlp);
+    listTasks(alpTasks,index);
+    deleteTasks(alpTasks,index); //Delete the alphabetically sorted array
+}
 int main() {
     int nr = 0; 
     int index = 0;
@@ -128,6 +154,7 @@ int main() {
     while(true){
         nr = readNR();
         if(!(nr)){
+            deleteTasks(tasks,index);
             return 0;
         }
         switch(nr){
@@ -140,6 +167,8 @@ int main() {
             case 3:
                 listTasks(tasks,index);
                 break;
+            case 4:
+                listTasksAlp(tasks,index);
         }
         
     }
