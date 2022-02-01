@@ -11,7 +11,7 @@ int readNR(){ //Reads and returns the number of the command the user wants to ex
     char* buffer = NULL;
     size_t size = 0;
     printf("Type 1 to add a task.\nType 2 to remove a task.\nType 3 to list the tasks.\n");
-    printf("Type 4 to sort the tasks alphabetically.\nType 5 to sort the tasks via the order they came in.\n");
+    printf("Type 4 to sort and list the tasks alphabetically.\nType 5 to sort and list the tasks via the order they came in.\n");
     printf("Type anything else to terminate the program.\n");
     getline(&buffer,&size,stdin);
     if(sscanf(buffer,"%d",&nbr) != 1 || nbr < 1 || nbr > 5){ //Input validation, the number has to be between 1 and 5
@@ -21,9 +21,10 @@ int readNR(){ //Reads and returns the number of the command the user wants to ex
     free(buffer);
     return nbr; 
 }
-int isInTasks(TASK* tasks, char* buffer, int max){ //Goes throught the array of tasks, returns 1 if the task is already there
+int isInTasks(TASK* tasks, char* buffer, int max, int* indexOfDup){ //Goes throught the array of tasks, returns 1 if the task is already there
     for(int i = 0;i < max; i++){
         if(strcmp(buffer,tasks[i].text) == 0){
+            *indexOfDup = i;
             return 1;
         }
     }
@@ -56,28 +57,36 @@ void hasVulgarRec(char* text, const char** vulgar, int index){ //Recursively cen
         hasVulgarRec(text,vulgar,index+1);
     }
 }
-char* readTask(TASK* tasks,int index){
+char* readTask(TASK* tasks,int index,int nr,int* indexOfDup){
     const char* vulgar[] = {"fuck","shit","bitch","dick","cock","cunt","piss","pussy","ass"};
     char* buffer = NULL;
     size_t size = 0;
     size_t chars = 0;
+    int indexOfDuplicate = -1;
     chars = getline(&buffer,&size,stdin);
     buffer[chars-1] = '\0';
     hasVulgarRec(buffer,vulgar,0);
-    if(isInTasks(tasks,buffer,index)){
+    if(isInTasks(tasks,buffer,index,&indexOfDuplicate)){
+        if(nr == 2){
+            *indexOfDup = indexOfDuplicate;
+            free(buffer);
+            return NULL;
+        }
         printf("Already on the list.\n");
         free(buffer);
         return NULL;
     }
     char* newText = strdup(buffer); //Create an independent string
+    free(buffer);
     return newText;
 }
-void addTask(TASK** tasks,int* constanta,int* index){ //This function censors(if necessary),checks if duplicate and adds the task to my array
-    char* newText = readTask(*tasks,*index);
+void addTask(TASK** tasks,int* constanta,int* index,int* order){ //This function censors(if necessary),checks if duplicate and adds the task to my array
+    char* newText = readTask(*tasks,*index,1,NULL);
     if(newText == NULL){
         return;
     }
-    TASK newTask = {newText,*index+1};
+    TASK newTask = {newText,*order};
+    (*order)++;
     (*tasks)[*index] = newTask;
     (*index)++;
     if(*index >= *constanta){ //Make the array bigger when necessary
@@ -86,12 +95,33 @@ void addTask(TASK** tasks,int* constanta,int* index){ //This function censors(if
     }
 
 }
+void listTasks(TASK* tasks, int index){
+    for(int i = 0;i < index;i++){
+            printf("%s\n",tasks[i].text);
+        }
+}
 void removeTask(TASK** tasks,int* index){
-
+    int indexOfDup = -1;
+    readTask(*tasks,*index,2,&indexOfDup);
+    if(indexOfDup == -1){
+        printf("This task is not on the list.\n");
+        return;
+    }
+    for(int i = indexOfDup;i < *index;i++){
+        if(i + 1 == *index){
+            break;
+        }
+        if(i == indexOfDup){
+            free((*tasks)[i].text);
+        }
+        (*tasks)[i] = (*tasks)[i+1];
+    }
+    (*index)--;
 }
 int main() {
     int nr = 0; 
     int index = 0;
+    int order = 1;
     TASK* tasks = (TASK*) malloc (sizeof(TASK)*10);
     int constanta = 10;
     printf("Welcome to the task list sorter.\n");
@@ -102,10 +132,14 @@ int main() {
         }
         switch(nr){
             case 1:
-                addTask(&tasks,&constanta,&index);
+                addTask(&tasks,&constanta,&index,&order);
                 break;
             case 2:
                 removeTask(&tasks,&index);
+                break;
+            case 3:
+                listTasks(tasks,index);
+                break;
         }
         
     }
