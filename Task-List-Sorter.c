@@ -56,7 +56,7 @@ void hasVulgarRec(char* text, const char** vulgar, int index){ //Recursively cen
         hasVulgarRec(text,vulgar,index+1);
     }
 }
-void addTask(TASK** tasks,int* constanta,int* index){ //This function censors(if necessary),checks if duplicate and adds the task to my array
+char* readTask(TASK* tasks,int index){
     const char* vulgar[] = {"fuck","shit","bitch","dick","cock","cunt","piss","pussy","ass"};
     char* buffer = NULL;
     size_t size = 0;
@@ -64,12 +64,19 @@ void addTask(TASK** tasks,int* constanta,int* index){ //This function censors(if
     chars = getline(&buffer,&size,stdin);
     buffer[chars-1] = '\0';
     hasVulgarRec(buffer,vulgar,0);
-    if(isInTasks(*tasks,buffer,*index)){
+    if(isInTasks(tasks,buffer,index)){
         printf("Already on the list.\n");
         free(buffer);
-        return;
+        return NULL;
     }
     char* newText = strdup(buffer); //Create an independent string
+    return newText;
+}
+void addTask(TASK** tasks,int* constanta,int* index){ //This function censors(if necessary),checks if duplicate and adds the task to my array
+    char* newText = readTask(*tasks,*index);
+    if(newText == NULL){
+        return;
+    }
     TASK newTask = {newText,*index+1};
     (*tasks)[*index] = newTask;
     (*index)++;
@@ -77,7 +84,9 @@ void addTask(TASK** tasks,int* constanta,int* index){ //This function censors(if
         (*constanta)*=2;
         *tasks = (TASK*) realloc (*tasks,(*constanta)*sizeof(TASK));
     }
-    free(buffer);
+
+}
+void removeTask(TASK** tasks,int* index){
 
 }
 int main() {
@@ -95,6 +104,8 @@ int main() {
             case 1:
                 addTask(&tasks,&constanta,&index);
                 break;
+            case 2:
+                removeTask(&tasks,&index);
         }
         
     }
