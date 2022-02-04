@@ -155,7 +155,12 @@ int cmpAlp(const void* a, const void* b){
 
 }
 int cmpImp(const void* a, const void* b){
-    return (*(TASK*)b).importance - (*(TASK*)a).importance;
+    int rt = 0;
+    rt = (*(TASK*)b).importance - (*(TASK*)a).importance;
+    if(rt == 0){
+        return (*(TASK*)a).order - (*(TASK*)b).order;
+    }
+    return rt;
 }
 void listTasksAlp(TASK* tasks, int index){
     TASK* alpTasks = (TASK*) malloc (sizeof(TASK)*index); //A new independent array to sort alphabetically
