@@ -5,6 +5,7 @@
 typedef struct task{
     char* text;
     int order;
+    int importance;
 } TASK;
 void deleteTasks(TASK* tasks, int index){
     for(int i = 0; i < index; i++){
@@ -17,7 +18,7 @@ int readNR(){ //Reads and returns the number of the command the user wants to ex
     char* buffer = NULL;
     size_t size = 0;
     printf("Type 1 to add a task.\nType 2 to remove a task.\nType 3 to list the tasks.\n");
-    printf("Type 4 to sort and list the tasks alphabetically.\nType 5 to sort and list the tasks against the order they came in.\n");
+    printf("Type 4 to sort and list the tasks alphabetically.\nType 5 to sort and list the tasks depending on their importance.\n");
     printf("Type anything else to terminate the program.\n");
     getline(&buffer,&size,stdin);
     if(sscanf(buffer,"%d",&nbr) != 1 || nbr < 1 || nbr > 5){ //Input validation, the number has to be between 1 and 5
@@ -86,12 +87,28 @@ char* readTask(TASK* tasks, int index, int nr, int* indexOfDup){
     free(buffer);
     return newText;
 }
+int readImportance(){
+    char* buffer = NULL;
+    size_t size = 0;
+    int importance = 0;
+    getline(&buffer, &size, stdin);
+    if(sscanf(buffer,"%d",&importance) != 1 || importance < 1 || importance > 5){
+        return -1;
+    }
+    return importance;
+}
 void addTask(TASK** tasks, int* constanta, int* index, int* order){ //This function censors(if necessary),checks if duplicate and adds the task to my array
     char* newText = readTask(*tasks, *index, 1, NULL);
     if(newText == NULL){
         return;
     }
-    TASK newTask = {newText, *order};
+    printf("What is the importance of the task?[1-5]\n");
+    int importance = readImportance();
+    if(importance == -1){
+        printf("Invalid number.\n");
+        return;
+    }
+    TASK newTask = {newText, *order, importance};
     (*order)++;
     (*tasks)[*index] = newTask;
     (*index)++;
@@ -124,10 +141,10 @@ void removeTask(TASK** tasks, int* index){
     }
     (*index)--; 
 }
-void copyTasks(TASK* orig, TASK* newT, int index){ //Function that copies and array into a new one
+void copyTasks(TASK* orig, TASK* newT, int index){ //Function that copies an array into a new one
     for(int i = 0; i < index; i++){
         char* copyText = strdup(orig[i].text);
-        TASK copyTask = {copyText, orig[i].order};
+        TASK copyTask = {copyText, orig[i].order, orig[i].importance};
         newT[i]  = copyTask;
     }
 }
@@ -137,8 +154,8 @@ int cmpAlp(const void* a, const void* b){
     return strcasecmp(first -> text, sec -> text); //Compare alphabetically
 
 }
-int cmpOrd(const void* a, const void* b){
-    return (*(TASK*)b).order - (*(TASK*)a).order;
+int cmpImp(const void* a, const void* b){
+    return (*(TASK*)b).importance - (*(TASK*)a).importance;
 }
 void listTasksAlp(TASK* tasks, int index){
     TASK* alpTasks = (TASK*) malloc (sizeof(TASK)*index); //A new independent array to sort alphabetically
@@ -147,12 +164,12 @@ void listTasksAlp(TASK* tasks, int index){
     listTasks(alpTasks, index);
     deleteTasks(alpTasks, index); //Delete the alphabetically sorted array
 }
-void listTasksAgOrder(TASK* tasks, int index){
-    TASK* ordTasks = (TASK*) malloc (sizeof(TASK)*index);
-    copyTasks(tasks, ordTasks, index);
-    qsort(ordTasks, index, sizeof(TASK), cmpOrd);
-    listTasks(ordTasks, index);
-    deleteTasks(ordTasks, index);
+void listTasksImp(TASK* tasks, int index){
+    TASK* impTasks = (TASK*) malloc (sizeof(TASK)*index);
+    copyTasks(tasks, impTasks, index);
+    qsort(impTasks, index, sizeof(TASK), cmpImp);
+    listTasks(impTasks, index);
+    deleteTasks(impTasks, index);
 }
 int main() {
     int nr = 0; 
@@ -181,9 +198,10 @@ int main() {
                 listTasksAlp(tasks, index);
                 break;
             case 5:
-                listTasksAgOrder(tasks, index);
+                listTasksImp(tasks, index);
                 break;
         }
         
     }
+    deleteTasks(tasks, index);
 }
